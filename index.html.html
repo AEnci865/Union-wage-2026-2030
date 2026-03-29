@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BMDA New Contract 2026–2029 – Grade & Healthcare Impact Explorer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { font-family: 'DM Sans', sans-serif; }
+  .mono { font-family: 'DM Mono', monospace; }
+
+  :root {
+    --navy: #0f2444;
+    --navy-mid: #1a3a6b;
+    --navy-light: #2a5298;
+    --red: #c8102e;
+    --red-light: #e8192f;
+    --gold: #f4b942;
+  }
+
+  body { background: #f4f6fb; }
+
+  /* Toggle */
+  .toggle-track {
+    width: 48px; height: 26px;
+    background: #cbd5e1;
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+  .toggle-track.on { background: var(--red); }
+  .toggle-thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 20px; height: 20px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    transition: left 0.25s;
+  }
+  .toggle-track.on .toggle-thumb { left: 25px; }
+
+  /* Custom select */
+  .cselect {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  /* Animated fade-in for results */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.3s ease forwards; }
+
+  /* Tab active */
+  .tab-btn { transition: all 0.2s; border-bottom: 3px solid transparent; }
+  .tab-btn.active { border-bottom-color: var(--red); color: var(--navy); font-weight: 700; }
+
+  /* Plan header stripes */
+  .plan-poa  { background: linear-gradient(135deg, #0f2444 0%, #1a3a6b 100%); }
+  .plan-pcps { background: linear-gradient(135deg, #c8102e 0%, #9b0c22 100%); }
+  .plan-phap { background: linear-gradient(135deg, #0e7a5c 0%, #065f46 100%); }
+
+  /* Sticky controls */
+  #controls-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  /* Pulse dot for live */
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .pulse-dot { animation: pulse 2s infinite; }
+
+  /* Number highlight rows */
+  .yr-row:hover td { background: #eef3ff !important; }
+  .yr-row td { transition: background 0.15s; }
+
+  .worst-badge {
+    background: linear-gradient(90deg, #fef3c7, #fde68a);
+    border: 1px solid #f59e0b;
+    color: #92400e;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+
+  .net-positive { color: #15803d; font-weight: 700; }
+  .net-negative { color: #b91c1c; font-weight: 700; }
+
+  .grade-prog-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--red);
+    display: inline-block;
+    margin-right: 4px;
+  }
+
+  .section-divider {
+    height: 3px;
+    background: linear-gradient(90deg, var(--red) 0%, var(--navy-light) 50%, transparent 100%);
+    border-radius: 2px;
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ═══════════════════════════════════════════ HEADER ══════════════════════════════════════════ -->
+<header style="background: linear-gradient(135deg, #0f2444 0%, #1a3a6b 60%, #1e4d9b 100%);" class="text-white shadow-2xl">
+  <div class="max-w-7xl mx-auto px-4 md:px-6 py-5 flex items-center gap-5">
+    <!-- Emblem -->
+    <div class="flex-shrink-0 relative">
+      <div class="w-16 h-16 rounded-full flex items-center justify-center border-4 border-white shadow-lg" style="background: var(--red);">
+        <span class="text-white font-black text-xl tracking-tighter">BMDA</span>
+      </div>
+      <span class="pulse-dot absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-white"></span>
+    </div>
+    <!-- Title -->
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2 flex-wrap">
+        <h1 class="text-2xl md:text-3xl font-black tracking-tight leading-none">BMDA Union</h1>
+        <span class="px-2 py-0.5 rounded text-xs font-bold tracking-widest uppercase" style="background:var(--red);">2026–2029</span>
+      </div>
+      <p class="text-blue-200 text-sm mt-1 font-medium">Grade &amp; Healthcare Impact Explorer · New Contract</p>
+    </div>
+    <!-- Right badge -->
+    <div class="hidden md:flex flex-col items-end gap-1">
+      <span class="text-xs uppercase tracking-widest text-blue-300 font-semibold">Ratified Contract</span>
+      <span class="text-white font-bold text-base mono">4-Year Agreement</span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════ CONTROLS ══════════════════════════════════════════ -->
+<div id="controls-bar" class="bg-white border-b border-gray-200 shadow-md">
+  <div class="max-w-7xl mx-auto px-4 md:px-6 py-4">
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
+
+      <!-- Grade -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Grade</label>
+        <select id="sel-grade" onchange="render()" class="cselect border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400">
+          <script>for(let g=18;g>=1;g--)document.write(`<option value="${g}">Grade ${g}</option>`);</script>
+        </select>
+      </div>
+
+      <!-- Job Type -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Job Type</label>
+        <select id="sel-job" onchange="render()" class="cselect border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400">
+          <option value="18">Designer</option>
+          <option value="14">Assoc. Engineer</option>
+          <option value="12">Lab &amp; NDT</option>
+          <option value="8">Clerk</option>
+          <option value="18">Other</option>
+        </select>
+      </div>
+
+      <!-- Shift -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Shift</label>
+        <select id="sel-shift" onchange="render()" class="cselect border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400">
+          <option value="0">1st Shift</option>
+          <option value="1.75">2nd Shift (+$1.75/hr)</option>
+          <option value="1.75">3rd Shift (+$1.75/hr)</option>
+        </select>
+      </div>
+
+      <!-- Coverage -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Coverage</label>
+        <select id="sel-cov" onchange="render()" class="cselect border border-slate-200 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-800 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400">
+          <option value="EO">Employee Only</option>
+          <option value="ES">Employee &amp; Spouse</option>
+          <option value="EC">Employee &amp; Child(ren)</option>
+          <option value="EF">Employee &amp; Family</option>
+        </select>
+      </div>
+
+      <!-- Smoker toggle -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">Tobacco Status</label>
+        <div class="flex items-center gap-2.5 py-1.5">
+          <span class="text-sm text-slate-500 font-medium">Non-Smoker</span>
+          <div id="toggle-track" class="toggle-track" onclick="toggleSmoker()">
+            <div class="toggle-thumb"></div>
+          </div>
+          <span class="text-sm font-semibold" style="color:var(--red)" id="smoker-label">Smoker</span>
+        </div>
+      </div>
+
+      <!-- Info chip -->
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold uppercase tracking-wider text-transparent select-none">Info</label>
+        <div class="rounded-lg px-3 py-2.5 text-xs font-semibold text-center" style="background:#eef3ff;color:#1a3a6b;border:1px solid #c7d7f9">
+          ↺ Results update instantly
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════ MAIN ════════════════════════════════════════════ -->
+<main class="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-5">
+
+  <!-- SUMMARY CARD -->
+  <div id="summary-card" class="fade-up bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+    <!-- top bar -->
+    <div class="px-5 py-4 border-b border-gray-100 flex flex-wrap gap-3 items-center justify-between" style="background:linear-gradient(90deg,#f8faff,#fff)">
+      <div>
+        <div class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Your Selection</div>
+        <div id="sum-title" class="text-xl font-black text-slate-800"></div>
+        <div id="sum-sub" class="text-sm text-slate-500 mt-0.5 font-medium"></div>
+      </div>
+      <div id="sum-cap-pill" class="flex-shrink-0"></div>
+    </div>
+    <!-- wage progression -->
+    <div id="sum-wages" class="px-5 py-4 grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+    <!-- gain bar -->
+    <div id="sum-gain-bar" class="px-5 pb-4"></div>
+  </div>
+
+  <!-- GRADE PROGRESSION NOTE -->
+  <div id="prog-note" class="hidden rounded-xl px-4 py-3 text-sm font-medium border" style="background:#fff8ed;border-color:#f59e0b;color:#92400e;"></div>
+
+  <!-- PLANS – Desktop side-by-side, Mobile tabs -->
+  <div>
+    <!-- Mobile tabs -->
+    <div class="md:hidden bg-white rounded-t-2xl border border-b-0 border-gray-200 flex overflow-hidden">
+      <button class="tab-btn active flex-1 py-3 text-sm text-slate-500" onclick="showTab('POA',this)">POA</button>
+      <button class="tab-btn flex-1 py-3 text-sm text-slate-500 border-x border-gray-200" onclick="showTab('PCPS',this)">PCPS</button>
+      <button class="tab-btn flex-1 py-3 text-sm text-slate-500" onclick="showTab('PHAP',this)">PHAP</button>
+    </div>
+    <div id="mobile-plan" class="md:hidden bg-white rounded-b-2xl border border-gray-200 shadow-lg overflow-hidden"></div>
+
+    <!-- Desktop -->
+    <div class="hidden md:grid md:grid-cols-3 gap-4" id="desktop-plans"></div>
+  </div>
+
+  <!-- WORST-CASE NOTE -->
+  <div class="rounded-2xl px-5 py-4 flex gap-4 items-start worst-badge">
+    <div class="text-2xl flex-shrink-0">⚠️</div>
+    <div>
+      <div class="font-black text-base mb-1">Worst-Case Scenario Display</div>
+      <div class="text-sm leading-relaxed">This shows what you'd pay if you hit the <strong>full Out-of-Pocket Maximum every single year</strong>. This is the absolute worst case. Most members will pay <strong>far less in OOP costs</strong> during any given year. Use these figures to understand your maximum exposure, not your expected annual cost.</div>
+    </div>
+  </div>
+
+  <!-- ASSUMPTIONS -->
+  <div class="rounded-xl px-5 py-4 text-xs text-slate-500 leading-relaxed" style="background:#f8faff;border:1px solid #e2e8f0">
+    <span class="font-bold text-slate-700">Calculation notes: </span>
+    Weekly Gross = (Hourly Rate + Shift Premium) × 40 hrs &nbsp;·&nbsp;
+    Net deducts: FICA 7.65% + estimated income tax ~22% + union dues ~$8/wk + weekly premium + weekly OOP max &nbsp;·&nbsp;
+    Grade progression: +1 grade/year up to job cap starting from your selected 2026 grade &nbsp;·&nbsp;
+    These are estimates — consult your union representative for official figures.
+  </div>
+
+</main>
+
+<!-- ════════════════════════════════════════════ FOOTER ════════════════════════════════════════════ -->
+<footer style="background:linear-gradient(135deg,#0f2444,#1a3a6b);" class="text-white mt-8 py-8">
+  <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+    <div class="text-2xl font-black">Stronger together 💪</div>
+    <div class="text-blue-200 font-medium">Wages generally outpace healthcare cost increases over the life of this contract.</div>
+    <div class="text-blue-400 text-xs mt-3">BMDA Union · Contract 2026–2029 · For informational use only. Consult your union representative for official benefit and wage details.</div>
+  </div>
+</footer>
+
+<!-- ═════════════════════════════════════════ JAVASCRIPT ════════════════════════════════════════ -->
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────
+const WAGES = {
+  18:{2026:46.50,2027:49.29,2028:51.75,2029:54.60},
+  17:{2026:44.70,2027:47.38,2028:49.75,2029:52.49},
+  16:{2026:43.00,2027:45.58,2028:47.86,2029:50.49},
+  15:{2026:42.23,2027:44.76,2028:47.00,2029:49.59},
+  14:{2026:41.68,2027:44.18,2028:46.39,2029:48.94},
+  13:{2026:40.50,2027:42.93,2028:45.08,2029:47.56},
+  12:{2026:39.33,2027:41.68,2028:43.77,2029:46.18},
+  11:{2026:38.07,2027:40.36,2028:42.37,2029:44.70},
+  10:{2026:36.77,2027:38.98,2028:40.93,2029:43.18},
+   9:{2026:35.49,2027:37.62,2028:39.50,2029:41.67},
+   8:{2026:34.00,2027:36.04,2028:37.84,2029:39.92},
+   7:{2026:32.80,2027:34.77,2028:36.51,2029:38.52},
+   6:{2026:31.51,2027:33.40,2028:35.07,2029:37.00},
+   5:{2026:30.39,2027:32.22,2028:33.83,2029:35.69},
+   4:{2026:29.34,2027:31.10,2028:32.66,2029:34.45},
+   3:{2026:28.39,2027:30.09,2028:31.60,2029:33.34},
+   2:{2026:27.64,2027:29.30,2028:30.76,2029:32.45},
+   1:{2026:26.75,2027:28.36,2028:29.77,2029:31.41},
+};
+
+// Weekly premiums [nonSmoker, smoker]
+// Source: official union contract documents
+const PREMIUMS = {
+  POA:{
+    2026:{EO:[13.45,20.16],ES:[24.62,38.72],EC:[24.62,38.72],EF:[38.09,58.84]},
+    2027:{EO:[14.12,21.17],ES:[25.85,40.66],EC:[25.85,40.66],EF:[39.99,61.78]},
+    2028:{EO:[14.97,22.44],ES:[27.40,43.10],EC:[27.40,43.10],EF:[42.39,65.49]},
+    2029:{EO:[15.87,23.79],ES:[29.04,45.69],EC:[29.04,45.69],EF:[44.93,69.42]},
+  },
+  PCPS:{
+    2026:{EO:[29.83,36.53],ES:[59.63,73.06],EC:[59.63,73.06],EF:[84.97,104.10]},
+    2027:{EO:[31.32,38.36],ES:[62.61,76.71],EC:[62.61,76.71],EF:[89.22,109.31]},
+    2028:{EO:[33.20,40.66],ES:[66.37,81.31],EC:[66.37,81.31],EF:[94.57,115.87]},
+    2029:{EO:[35.19,43.10],ES:[70.35,86.19],EC:[70.35,86.19],EF:[100.24,122.82]},
+  },
+  PHAP:{
+    2026:{EO:[7.26,14.42],ES:[14.50,28.83],EC:[14.50,28.83],EF:[21.76,43.25]},
+    2027:{EO:[7.62,15.14],ES:[15.23,30.27],EC:[15.23,30.27],EF:[22.85,45.41]},
+    2028:{EO:[8.08,16.05],ES:[16.14,32.09],EC:[16.14,32.09],EF:[24.22,48.13]},
+    2029:{EO:[8.56,17.01],ES:[17.11,34.02],EC:[17.11,34.02],EF:[25.67,51.02]},
+  },
+};
+
+function getOOP(plan, year, cov) {
+  if (plan === 'PHAP') {
+    if (cov === 'EO') return year === 2026 ? 2200 : 2800;
+    return year === 2026 ? 4400 : 5600;
+  }
+  if (plan === 'PCPS') {
+    // Per Person OOP max; for family tiers use Maximum Per Family
+    if (cov === 'EO') return {2026:250,2027:400,2028:500,2029:600}[year];
+    return {2026:500,2027:800,2028:1000,2029:1200}[year];
+  }
+  // POA — Per Person / Maximum Per Family
+  if (cov === 'EO') return {2026:2500,2027:2900,2028:3100,2029:3600}[year];
+  return {2026:5000,2027:5800,2028:6200,2029:7200}[year]; // ES, EC, EF all use family max
+}
+
+const JOB_NAMES = {
+  '18':'Designer','14':'Assoc. Engineer','12':'Lab & NDT','8':'Clerk',
+};
+
+const PLAN_CONFIG = {
+  POA:  { label:'POA',  desc:'Preferred Organization',          headerCls:'plan-poa',  accentCls:'text-blue-900',  lightCls:'bg-blue-50',  borderCls:'border-blue-200' },
+  PCPS: { label:'PCPS', desc:'Primary Care Plan',               headerCls:'plan-pcps', accentCls:'text-red-800',   lightCls:'bg-red-50',   borderCls:'border-red-200'  },
+  PHAP: { label:'PHAP', desc:'High-Deductible / HSA-Eligible',  headerCls:'plan-phap', accentCls:'text-emerald-800',lightCls:'bg-emerald-50',borderCls:'border-emerald-200'},
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────
+let smoker = false;
+let currentTab = 'POA';
+
+function toggleSmoker() {
+  smoker = !smoker;
+  const t = document.getElementById('toggle-track');
+  t.classList.toggle('on', smoker);
+  document.getElementById('smoker-label').style.opacity = smoker ? '1' : '0.4';
+  render();
+}
+
+function showTab(plan, btn) {
+  currentTab = plan;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMobilePlan();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+const $d = (id) => document.getElementById(id);
+const fmt = (n) => '$' + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmthr = (n) => '$' + n.toFixed(2);
+
+function getGrade(startGrade, year, cap) {
+  return Math.min(startGrade + (year - 2026), cap);
+}
+
+function calcRow(plan, year, startGrade, cap, shiftPrem, cov, smk) {
+  const g = Math.min(Math.max(getGrade(startGrade, year, cap), 1), 18);
+  const hourly = WAGES[g][year];
+  const weeklyGross = (hourly + shiftPrem) * 40;
+  const weeklyPrem = PREMIUMS[plan][year][cov][smk ? 1 : 0];
+  const annualOOP = getOOP(plan, year, cov);
+  const weeklyOOP = annualOOP / 52;
+  const taxRate = 0.2965;
+  const netApprox = weeklyGross * (1 - taxRate) - weeklyPrem - weeklyOOP - 8;
+  const netPremOnly = weeklyGross * (1 - taxRate) - weeklyPrem - 8;
+  return { year, grade: g, hourly, weeklyGross, weeklyPrem, annualOOP, weeklyOOP, netApprox, netPremOnly };
+}
+
+// ── PLAN HTML BUILDER ─────────────────────────────────────────────────
+function buildPlanHTML(plan, startGrade, cap, shiftPrem, cov, smk) {
+  const cfg = PLAN_CONFIG[plan];
+  const years = [2026, 2027, 2028, 2029];
+  const rows = years.map(yr => calcRow(plan, yr, startGrade, cap, shiftPrem, cov, smk));
+  const base = rows[0];
+
+  let tableRows = '';
+  rows.forEach((r, i) => {
+    const deltaNet = r.netApprox - base.netApprox;
+    const deltaStr = i === 0
+      ? '<span class="text-slate-400 mono text-xs">baseline</span>'
+      : `<span class="${deltaNet >= 0 ? 'net-positive' : 'net-negative'} mono text-xs">${deltaNet >= 0 ? '+' : '-'}${fmt(deltaNet)}</span>`;
+
+    const rowBg = i % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
+
+    tableRows += `
+      <tr class="yr-row ${rowBg}">
+        <td class="px-3 py-2.5 font-black text-slate-700 whitespace-nowrap">
+          <span class="text-base">${r.year}</span>
+          <span class="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500">G${r.grade}</span>
+        </td>
+        <td class="px-2 py-2.5 mono text-sm font-semibold text-slate-700 text-right">${fmthr(r.hourly)}</td>
+        <td class="px-2 py-2.5 mono text-sm text-slate-600 text-right">${fmt(r.weeklyGross)}</td>
+        <td class="px-2 py-2.5 mono text-sm text-slate-600 text-right">${fmt(r.weeklyPrem)}</td>
+        <td class="px-2 py-2.5 mono text-sm text-red-600 font-semibold text-right">${fmt(r.weeklyOOP)}</td>
+        <td class="px-2 py-2.5 mono text-sm font-bold text-green-700 text-right">${fmt(r.netPremOnly)}</td>
+        <td class="px-2 py-2.5 mono text-sm font-bold ${cfg.accentCls} text-right">${fmt(r.netApprox)}</td>
+        <td class="px-2 py-2.5 text-right">${deltaStr}</td>
+      </tr>`;
+  });
+
+  const gain4yr = rows[3].netApprox - rows[0].netApprox;
+
+  return `
+    <div class="flex flex-col h-full">
+      <div class="${cfg.headerCls} text-white px-4 py-4">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <div class="text-xl font-black tracking-tight">${cfg.label}</div>
+            <div class="text-xs opacity-75 mt-0.5">${cfg.desc}</div>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <div class="text-xs opacity-60 uppercase tracking-wider">4-yr Net Δ</div>
+            <div class="font-black text-lg ${gain4yr >= 0 ? 'text-green-300' : 'text-red-300'}">${gain4yr >= 0 ? '+' : ''}${fmt(gain4yr)}/wk</div>
+          </div>
+        </div>
+      </div>
+      <div class="overflow-x-auto flex-1">
+        <table class="w-full border-collapse text-xs min-w-[520px]">
+          <thead>
+            <tr class="${cfg.lightCls} border-b ${cfg.borderCls}">
+              <th class="px-3 py-2 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Year</th>
+              <th class="px-2 py-2 text-right font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">$/hr</th>
+              <th class="px-2 py-2 text-right font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Wkly Gross</th>
+              <th class="px-2 py-2 text-right font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Wkly Prem</th>
+              <th class="px-2 py-2 text-right font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Max OOP/wk</th>
+              <th class="px-2 py-2 text-right font-bold text-green-700 uppercase tracking-wider whitespace-nowrap">Net (Prem Only)</th>
+              <th class="px-2 py-2 text-right font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Net After Max HC</th>
+              <th class="px-2 py-2 text-right font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">vs 2026</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </div>
+      <div class="${cfg.lightCls} border-t ${cfg.borderCls} px-4 py-2.5 flex gap-4 flex-wrap text-xs text-slate-600">
+        <span><span class="font-bold">2026 Net:</span> <span class="mono font-semibold">${fmt(rows[0].netApprox)}/wk</span></span>
+        <span>·</span>
+        <span><span class="font-bold">2029 Net:</span> <span class="mono font-semibold">${fmt(rows[3].netApprox)}/wk</span></span>
+        <span>·</span>
+        <span><span class="font-bold">Annual OOP Max 2029:</span> <span class="mono font-semibold text-red-600">${fmt(rows[3].annualOOP)}</span></span>
+      </div>
+    </div>`;
+}
+
+// ── RENDER MOBILE PLAN ────────────────────────────────────────────────
+function renderMobilePlan() {
+  const s = getState();
+  $d('mobile-plan').innerHTML = buildPlanHTML(currentTab, s.grade, s.cap, s.shift, s.cov, smoker);
+}
+
+// ── GET STATE ─────────────────────────────────────────────────────────
+function getState() {
+  const grade = parseInt($d('sel-grade').value);
+  const cap   = parseInt($d('sel-job').value);
+  const shift = parseFloat($d('sel-shift').value);
+  const cov   = $d('sel-cov').value;
+  const jobEl = $d('sel-job');
+  const jobName = jobEl.options[jobEl.selectedIndex].text;
+  return { grade, cap, shift, cov, jobName };
+}
+
+// ── MAIN RENDER ───────────────────────────────────────────────────────
+function render() {
+  const { grade, cap, shift, cov, jobName } = getState();
+  const years = [2026,2027,2028,2029];
+
+  // Progression
+  const gradeProgression = years.map(yr => Math.min(Math.max(getGrade(grade, yr, cap), 1), 18));
+  const atCap = grade >= cap;
+  const cappedEarly = !atCap && gradeProgression[0] !== gradeProgression[3];
+
+  // Summary
+  $d('sum-title').textContent = `Grade ${grade} · ${jobName.replace(/\(.*\)/,'').trim()}`;
+  $d('sum-sub').textContent = `${shift > 0 ? '2nd/3rd Shift +$1.75/hr  ·  ' : '1st Shift  ·  '}${cov === 'EO' ? 'Employee Only' : cov === 'ES' ? 'Employee & Spouse' : cov === 'EC' ? 'Employee & Child(ren)' : 'Employee & Family'}  ·  ${smoker ? '🚬 Smoker' : '✅ Non-Smoker'}`;
+
+  const capColor = grade >= cap ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-green-100 text-green-800 border-green-300';
+  $d('sum-cap-pill').innerHTML = `<span class="px-3 py-1.5 rounded-full text-xs font-bold border ${capColor}">Job Cap: Grade ${cap}${grade >= cap ? ' (at cap)' : ''}</span>`;
+
+  // Wage progression cards
+  const wageHTML = years.map((yr, i) => {
+    const g = gradeProgression[i];
+    const hrly = WAGES[g][yr];
+    const gross = (hrly + shift) * 40;
+    const isFirst = i === 0;
+    return `
+      <div class="rounded-xl p-3.5 border ${isFirst ? 'border-blue-200 bg-blue-50' : 'border-gray-100 bg-gray-50'} flex flex-col gap-1">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">${yr}</span>
+          <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${isFirst ? 'bg-blue-200 text-blue-800' : 'bg-slate-200 text-slate-600'}">G${g}</span>
+        </div>
+        <div class="mono font-black text-lg text-slate-800">${fmthr(hrly + shift)}<span class="text-xs font-medium text-slate-400">/hr</span></div>
+        <div class="text-xs text-slate-500 mono">${fmt(gross)}<span class="text-slate-400">/wk gross</span></div>
+      </div>`;
+  }).join('');
+  $d('sum-wages').innerHTML = wageHTML;
+
+  // Gain bar
+  const startHr = WAGES[gradeProgression[0]][2026] + shift;
+  const endHr   = WAGES[gradeProgression[3]][2029] + shift;
+  const startGross = startHr * 40;
+  const endGross   = endHr * 40;
+  const wkGain = endGross - startGross;
+  const pctGain = ((endHr - WAGES[gradeProgression[0]][2026]) / WAGES[gradeProgression[0]][2026] * 100).toFixed(1);
+  $d('sum-gain-bar').innerHTML = `
+    <div class="rounded-xl px-4 py-3 flex flex-wrap gap-4 items-center" style="background:linear-gradient(90deg,#f0fdf4,#dcfce7);border:1px solid #bbf7d0">
+      <div>
+        <div class="text-xs font-bold uppercase tracking-widest text-green-600 mb-0.5">4-Year Wage Gain</div>
+        <div class="text-2xl font-black text-green-700 mono">+${fmt(wkGain)}<span class="text-sm font-medium text-green-600">/wk gross</span></div>
+      </div>
+      <div class="h-8 w-px bg-green-300 hidden md:block"></div>
+      <div class="text-sm text-green-700 font-semibold">
+        ${fmthr(WAGES[gradeProgression[0]][2026])} → ${fmthr(endHr)}/hr &nbsp;·&nbsp; <span class="font-black">+${pctGain}%</span> over contract
+      </div>
+      <div class="ml-auto hidden lg:block text-xs text-green-600 font-medium max-w-xs text-right">
+        💪 Your wage increase outpaces estimated healthcare cost growth over this contract period.
+      </div>
+    </div>`;
+
+  // Progression note
+  const progEl = $d('prog-note');
+  if (!atCap && cappedEarly) {
+    progEl.classList.remove('hidden');
+    progEl.innerHTML = `📈 <strong>Grade Progression:</strong> You advance from Grade ${gradeProgression[0]} → ${gradeProgression.join(' → ')} over the contract, capping at Grade ${cap} (${jobName.replace(/\(.*\)/,'').trim()}). Each year's row reflects your actual grade that year.`;
+  } else if (atCap) {
+    progEl.classList.remove('hidden');
+    progEl.innerHTML = `📌 <strong>At Job Cap:</strong> You are already at or above the Grade ${cap} cap for ${jobName.replace(/\(.*\)/,'').trim()}. Wage increases still apply each year via the contract rate schedule.`;
+  } else {
+    progEl.classList.add('hidden');
+  }
+
+  // Desktop plans
+  const desktopEl = $d('desktop-plans');
+  desktopEl.innerHTML = '';
+  ['POA','PCPS','PHAP'].forEach(plan => {
+    const col = document.createElement('div');
+    col.className = 'bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden fade-up flex flex-col';
+    col.innerHTML = buildPlanHTML(plan, grade, cap, shift, cov, smoker);
+    desktopEl.appendChild(col);
+  });
+
+  // Mobile plan
+  renderMobilePlan();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+document.getElementById('smoker-label').style.opacity = '0.4';
+render();
+</script>
+</body>
+</html>
